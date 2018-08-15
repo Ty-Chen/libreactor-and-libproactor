@@ -68,3 +68,25 @@ void Logging_Acceptor::handle_event (Event_Type et)
 	(new_connection);
 }
 
+Logging_Handler::Logging_Handler (SOCK_Stream &cs)
+: peer_stream_ (cs) {
+	// Register with the dispatcher for READ events.
+	Initiation_Dispatcher::instance ()->
+	register_handler (this, READ_EVENT);
+}
+
+void Logging_Handler::handle_event (Event_Type et) {
+	if (et == READ_EVENT) {
+		Log_Record log_record;
+		this->peer_stream_.recv ((void *) log_record,
+		sizeof log_record);// Write logging record to standard output.
+		log_record.write (STDOUT);
+		}
+	else if (et == CLOSE_EVENT) {
+		this->peer_stream_.close ();
+		delete (void *) this;
+	}
+}
+
+
+
